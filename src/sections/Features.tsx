@@ -38,7 +38,7 @@ export const Features = () => {
           Elevate you SEO efforts.
         </h2>
         <p className="text-lg md:text-xl max-w-2xl mx-auto text-white/70 tracking-tight text-center mt-5">
-          From small startups to large enterprises, uor AI-driven toop has
+          From small startups to large enterprises, our AI-driven toop has
           revolutionized the way businesses approach SEO.
         </p>
         <div className="mt-10 flex flex-col lg:flex-row gap-3">
