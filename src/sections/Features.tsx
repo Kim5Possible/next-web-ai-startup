@@ -1,7 +1,23 @@
 "use client";
-import { DotLottiePlayer } from "@dotlottie/react-player";
-import Image from "next/image";
+import {
+  DotLottieCommonPlayer,
+  DotLottiePlayer,
+} from "@dotlottie/react-player";
 import productImage from "../assets/product-image.png";
+import {
+  animate,
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  ValueAnimationTransition,
+} from "framer-motion";
+import {
+  Component,
+  ComponentPropsWithoutRef,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 const tabs = [
   {
@@ -30,7 +46,108 @@ const tabs = [
   },
 ];
 
+const FeatureTab = (
+  props: (typeof tabs)[number] &
+    ComponentPropsWithoutRef<"div"> & {
+      selected: boolean;
+    }
+) => {
+  const tabRef = useRef<HTMLDivElement>(null);
+  const dotLittieRef = useRef<DotLottieCommonPlayer>(null);
+
+  const xPercentage = useMotionValue(0);
+  const yPercentage = useMotionValue(0);
+  const maskImage = useMotionTemplate`radial-gradient(80px 80px at ${xPercentage}% ${yPercentage}%,black,transparent)`;
+
+  useEffect(() => {
+    if (!tabRef.current || !props.selected) return;
+    xPercentage.set(0);
+    yPercentage.set(0);
+    const { height, width } = tabRef.current?.getBoundingClientRect();
+    const circumference = height * 2 + width * 2;
+    const times = [
+      0,
+      width / circumference,
+      (width + height) / circumference,
+      (width * 2 + height) / circumference,
+      1,
+    ];
+    const options: ValueAnimationTransition = {
+      times,
+      duration: 4,
+      repeat: Infinity,
+      ease: "linear",
+      repeatType: "loop",
+    };
+    animate(xPercentage, [0, 100, 100, 0, 0], options);
+    animate(yPercentage, [0, 0, 100, 100, 0], options);
+  }, [props.selected]);
+
+  const handleTabHover = () => {
+    dotLittieRef.current?.seek(0);
+    dotLittieRef.current?.play();
+  };
+  return (
+    <div
+      ref={tabRef}
+      onMouseEnter={handleTabHover}
+      className="relative border border-white/15 flex p-2.5 rounded-xl gap-2.5 items-center md:flex-1"
+      onClick={props.onClick}
+    >
+      {props.selected && (
+        <motion.div
+          style={{ maskImage }}
+          className="absolute inset-0 -m-px border rounded-lg border-[#A369FF]"
+        ></motion.div>
+      )}
+      <div className="h-12 w-12 border border-white/15 rounded-lg inline-flex justify-center items-center">
+        <DotLottiePlayer
+          ref={dotLittieRef}
+          src={props.icon}
+          className="w-5 h-5"
+          autoplay
+        />
+      </div>
+      <div className="font-medium">{props.title}</div>
+      {props.isNew && (
+        <div className="rounded-full px-2 py-0.5 text-xs bg-[#8c44ff] text-black font-semibold">
+          NEW
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const Features = () => {
+  const [selectedTab, setSelectedTab] = useState(0);
+  const backgroundPositionX = useMotionValue(tabs[0].backgroundPositionX);
+  const backgroundPositionY = useMotionValue(tabs[0].backgroundPositionY);
+  const backgroundSizeX = useMotionValue(tabs[0].backgroundSizeX);
+  const backgroundPosition = useMotionTemplate`${backgroundPositionX}% ${backgroundPositionY}%`;
+  const backgroundSize = useMotionTemplate`${backgroundSizeX}% auto`;
+
+  const handlerSelectTab = (index: number) => {
+    setSelectedTab(index);
+    const animateOptions: ValueAnimationTransition = {
+      duration: 2,
+      ease: "easeInOut",
+    };
+    animate(
+      backgroundSizeX,
+      [backgroundSizeX.get(), 100, tabs[index].backgroundSizeX],
+      animateOptions
+    );
+    animate(
+      backgroundPositionX,
+      [backgroundPositionX.get(), tabs[index].backgroundPositionX],
+      animateOptions
+    );
+    animate(
+      backgroundPositionY,
+      [backgroundPositionY.get(), tabs[index].backgroundPositionY],
+      animateOptions
+    );
+  };
   return (
     <section className="py-20 md:py-24">
       <div className="container">
@@ -41,29 +158,25 @@ export const Features = () => {
           From small startups to large enterprises, our AI-driven toop has
           revolutionized the way businesses approach SEO.
         </p>
-        <div className="mt-10 flex flex-col lg:flex-row gap-3">
-          {tabs.map((tab) => (
-            <div
+        <div className="mt-10 flex flex-col cursor-pointer lg:flex-row gap-3">
+          {tabs.map((tab, index) => (
+            <FeatureTab
+              {...tab}
               key={tab.title}
-              className="border border-white/15 flex p-2.5 rounded-xl gap-2.5 items-center md:flex-1"
-            >
-              <div className="h-12 w-12 border border-white/15 rounded-lg inline-flex justify-center items-center">
-                <DotLottiePlayer src={tab.icon} className="w-5 h-5" autoplay />
-              </div>
-              <div className="font-medium">{tab.title}</div>
-              {tab.isNew && (
-                <div className="rounded-full px-2 py-0.5 text-xs bg-[#8c44ff] text-black font-semibold">
-                  NEW
-                </div>
-              )}
-            </div>
+              selected={selectedTab === index}
+              onClick={() => handlerSelectTab(index)}
+            />
           ))}
         </div>
         <div className="border border-white/20 p-2.5 rounded-xl mt-3">
-          <div
+          <motion.div
             className="aspect-video bg-cover border border-white/20 rounded-lg"
-            style={{ backgroundImage: `url(${productImage.src})` }}
-          ></div>
+            style={{
+              backgroundPosition,
+              backgroundSize,
+              backgroundImage: `url(${productImage.src})`,
+            }}
+          ></motion.div>
         </div>
       </div>
     </section>
