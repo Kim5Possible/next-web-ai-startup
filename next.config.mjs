@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
+const isProd = process.env.NODE_ENV === "production";
 const nextConfig = {
+  output: "export",
+  reactStrictMode: true,
+  assetPrefix: isProd ? "/next-web-ai-startup" : "",
+  basePath: isProd ? "/next-web-ai-startup" : "",
+  images: {
+    unoptimized: true,
+  },
   webpack(config) {
     // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find((rule) =>
